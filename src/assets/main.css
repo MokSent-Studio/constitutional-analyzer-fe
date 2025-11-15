@@ -1,0 +1,68 @@
+/* src/assets/main.css */
+
+/* 1. Define our Design System using CSS Variables */
+:root {
+  --color-background: #f8f9fa; /* A very light grey for the page background */
+  --color-surface: #ffffff; /* Pure white for cards and input backgrounds */
+  --color-primary: #007bff; /* A strong, trustworthy blue for actions */
+  --color-primary-hover: #0056b3; /* A darker blue for hover states */
+  --color-text-primary: #212529; /* A dark, readable color for main text */
+  --color-text-secondary: #6c757d; /* A lighter grey for helper text and subtitles */
+  --color-border: #dee2e6; /* A subtle border color */
+
+  --font-family:
+    Inter, -apple-system, BlinkMacSystem-Bold, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell,
+    'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  --border-radius: 8px;
+  --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+/* 2. Apply a modern CSS Reset and the Design System globally */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+  font-family: var(--font-family);
+  font-size: 16px;
+  line-height: 1.6;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2 {
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+/* 3. Global styles for common elements to ensure consistency */
+button,
+input[type='text'],
+input[type='url'] {
+  font-family: inherit;
+  font-size: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  padding: 10px 15px;
+  transition: all 0.2s ease-in-out;
+}
+
+input[type='text']:focus,
+input[type='url']:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+}
+
+button {
+  cursor: pointer;
+}
