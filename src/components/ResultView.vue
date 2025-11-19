@@ -7,14 +7,24 @@
       </button>
     </header>
 
-    <div class="conversation-history">
-      <div v-for="(item, index) in conversationHistory" :key="index" class="conversation-block">
-        <div v-if="item.question" class="user-question">
-          <strong>You asked:</strong> {{ item.question }}
+    <div class="conversation-history" ref="historyContainer">
+      <!-- We now loop over the history and create a 'message-row' for each item -->
+      <div v-for="(item, index) in conversationHistory" :key="index">
+        <!-- User's Question Row -->
+        <div v-if="item.question" class="message-row user">
+          <div class="message-content user-question">
+            {{ item.question }}
+          </div>
+          <Icon name="user" class="icon-user" />
         </div>
-        <div class="ai-answer">
-          <SkeletonLoader v-if="index === conversationHistory.length - 1 && isFollowUpLoading" />
-          <pre>{{ item.answer }}</pre>
+
+        <!-- AI's Answer Row -->
+        <div class="message-row ai">
+          <Icon name="ai" class="icon-ai" />
+          <div class="message-content ai-answer">
+            <SkeletonLoader v-if="index === conversationHistory.length - 1 && isFollowUpLoading" />
+            <MarkdownRenderer v-else :content="item.answer" />
+          </div>
         </div>
       </div>
     </div>
@@ -35,107 +45,141 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch, nextTick } from 'vue'
 import SkeletonLoader from './SkeletonLoader.vue'
+import MarkdownRenderer from './MarkdownRenderer.vue'
+import Icon from './Icon.vue'
 
-// Define the shape of a conversation item for the prop
 interface ConversationItem {
   question?: string
   answer: string
 }
 
-// PROPS: Data passed down from the parent
-defineProps<{
+const props = defineProps<{
   conversationHistory: ConversationItem[]
   isFollowUpLoading: boolean
 }>()
 
-// EMITS: Events sent up to the parent
 const emit = defineEmits(['submit-follow-up', 'start-new'])
 
 const newFollowUpQuestion = ref('')
 
+// --- NEW LOGIC FOR AUTO-SCROLLING ---
+// 1. Create a template ref to get access to the history div
+const historyContainer = ref<HTMLElement | null>(null)
+
+// 2. Watch for changes in the conversationHistory prop
+watch(
+  () => props.conversationHistory,
+  async () => {
+    // Wait for Vue to update the DOM with the new message
+    await nextTick()
+
+    // Now that the new message is rendered, scroll to the bottom
+    const el = historyContainer.value
+    if (el) {
+      el.scrollTop = el.scrollHeight
+    }
+  },
+  { deep: true },
+) // 'deep' is important to watch for new items being pushed to the array
+
 function submitFollowUp() {
   const question = newFollowUpQuestion.value.trim()
   if (!question) return
-  // Emit the question to the parent to handle the API call
   emit('submit-follow-up', question)
-  newFollowUpQuestion.value = '' // Clear the input
+  newFollowUpQuestion.value = ''
 }
 </script>
 
 <style scoped>
+/* --- THIS IS THE KEY LAYOUT CHANGE --- */
 .result-view {
-  margin-bottom: 2rem;
+  display: flex;
+  flex-direction: column;
+  height: calc(90vh - 100px);
+  max-height: 800px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  background-color: var(--color-surface);
+  box-shadow: var(--box-shadow);
+  overflow: hidden;
 }
 
 .result-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
+  flex-shrink: 0;
+  padding: 1rem 1.5rem;
   border-bottom: 1px solid var(--color-border);
-  padding-bottom: 1.5rem;
 }
-
-.new-analysis-button {
-  background-color: var(--color-surface);
+.conversation-history {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
 }
-.new-analysis-button:hover {
+.follow-up-form {
+  flex-shrink: 0;
+  padding: 1rem;
+  border-top: 1px solid var(--color-border);
   background-color: var(--color-background);
 }
 
-.conversation-history {
+/* NEW: Styles for the message rows */
+.message-row {
+  display: flex;
+  align-items: flex-start; /* Align icon with the top of the message bubble */
+  gap: 0.75rem;
   margin-bottom: 2rem;
+  max-width: 90%; /* Prevent messages from taking the full width */
 }
 
-/* --- FIX #1: ADD SPACING BETWEEN CONVERSATION BLOCKS --- */
-.conversation-block {
-  margin-bottom: 2rem; /* This creates the needed space */
+.message-row.ai {
+  /* Default is left-aligned, so no extra styles needed */
 }
 
-.user-question {
-  background-color: #e1eefc;
-  color: #004085;
+.message-row.user {
+  /* Push to the right */
+  justify-content: flex-end;
+  margin-left: auto; /* This pushes the whole row to the right */
+}
+
+.message-content {
   padding: 1rem 1.25rem;
+  border-radius: 12px;
+}
+
+/* Specific styling for bubbles and icons */
+.user-question {
+  background-color: var(--color-primary);
+  color: white;
   border-radius: 12px 12px 0 12px;
-  margin-bottom: 0.75rem;
-  display: inline-block;
-  max-width: 80%;
-  /* --- FIX #2B: ADD WRAPPING TO USER QUESTION FOR CONSISTENCY --- */
-  white-space: pre-wrap;
-  word-wrap: break-word;
 }
-
-.ai-answer pre {
-  background-color: var(--color-surface);
+.ai-answer {
+  background-color: var(--color-background);
   border: 1px solid var(--color-border);
-  box-shadow: var(--box-shadow);
-  padding: 1.5rem;
   border-radius: 0 12px 12px 12px;
-  font-family: 'Courier New', Courier, monospace;
-  /* --- FIX #2A: ADD TEXT WRAPPING TO THE AI'S ANSWER --- */
-  white-space: pre-wrap; /* This tells the text to wrap */
-  word-wrap: break-word; /* A fallback for better browser compatibility */
 }
 
+.icon-ai {
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+}
+.icon-user {
+  background-color: var(--color-primary);
+  color: white;
+  /* Re-order the elements for right-alignment */
+  order: 2;
+}
+
+/* Other styles */
 .follow-up-form {
   display: flex;
   gap: 0.5rem;
-  margin-top: 2rem;
 }
 .follow-up-form input {
   flex-grow: 1;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
 }
-.follow-up-form button {
-  background-color: var(--color-primary);
-  color: white;
-  border: none;
-}
-.follow-up-form button:hover:not(:disabled) {
-  background-color: var(--color-primary-hover);
+.new-analysis-button {
+  background-color: var(--color-surface);
 }
 </style>

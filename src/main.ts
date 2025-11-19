@@ -20,7 +20,8 @@ const app = createApp(App)
 
 app.use(createPinia())
 
+app.mount('#app')
 // Ensure mocking is enabled before the app mounts
-enableMocking().then(() => {
-  app.mount('#app')
-})
+// enableMocking().then(() => {
+//   app.mount('#app')
+// })

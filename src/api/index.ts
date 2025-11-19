@@ -1,5 +1,11 @@
 import axios from 'axios'
 
+interface FollowUpPayload {
+  question: string
+  initial_analysis_text: string
+  original_url: string
+}
+
 // Define the base URL for your Python backend
 const apiClient = axios.create({
   baseURL: 'http://127.0.0.1:8000/api', // Example for a local Django/Flask server
@@ -31,7 +37,7 @@ export const submitAnalysisRequest = async (requestData: any) => {
 }
 
 // Function to POST follow up questions
-export const submitFollowUpQuestion = async (payload: { question: string; context?: any }) => {
+export const submitFollowUpQuestion = async (payload: FollowUpPayload) => {
   try {
     const response = await apiClient.post('/follow-up', payload)
     return response.data

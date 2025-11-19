@@ -1,5 +1,6 @@
 <template>
   <div class="analysis-container">
+    <LoadingOverlay :show="isLoading" :message="currentLoadingMessage" />
     <ErrorMessage v-if="errorMessage" :message="errorMessage" />
 
     <InitialRequestForm
@@ -19,11 +20,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { submitAnalysisRequest, submitFollowUpQuestion } from '@/api'
 import InitialRequestForm from './InitialRequestForm.vue'
 import ResultView from './ResultView.vue'
 import ErrorMessage from './ErrorMessage.vue'
+import LoadingOverlay from './LoadingOverlay.vue'
 
 // --- STATE MANAGEMENT ---
 interface ConversationItem {
@@ -37,6 +39,37 @@ const conversationHistory = ref<ConversationItem[]>([])
 const isFollowUpLoading = ref(false)
 const errorMessage = ref('')
 
+const originalUrlForContext = ref('')
+const initialAnalysisForContext = ref('')
+
+// --- Loading Information ---
+const loadingMessages = [
+  'Fetching the document...',
+  'Analyzing the text...',
+  'Consulting the AI...',
+  'Finalizing the report...',
+]
+const currentLoadingMessage = ref(loadingMessages[0])
+let messageInterval: number | undefined
+
+// Use a 'watch' effect to start/stop the message cycling
+watch(isLoading, (newVal) => {
+  if (newVal) {
+    // When loading starts, begin cycling through messages
+    let messageIndex = 0
+    currentLoadingMessage.value = loadingMessages[messageIndex]
+    messageInterval = window.setInterval(() => {
+      messageIndex = (messageIndex + 1) % loadingMessages.length
+      currentLoadingMessage.value = loadingMessages[messageIndex]
+    }, 2500) // Change message every 2.5 seconds
+  } else {
+    // When loading stops, clear the interval
+    if (messageInterval) {
+      clearInterval(messageInterval)
+    }
+  }
+})
+
 // --- API LOGIC ---
 async function handleSubmit(payload: any) {
   errorMessage.value = ''
@@ -45,6 +78,10 @@ async function handleSubmit(payload: any) {
 
   try {
     const result = await submitAnalysisRequest(payload)
+
+    originalUrlForContext.value = payload.chapter_url
+    initialAnalysisForContext.value = result.analysis
+
     conversationHistory.value.push({ answer: result.analysis })
     viewState.value = 'RESULT'
   } catch (error) {
@@ -63,7 +100,13 @@ async function handleFollowUpSubmit(question: string) {
   conversationHistory.value.push({ question, answer: 'Typing...' })
 
   try {
-    const result = await submitFollowUpQuestion({ question })
+    const payload = {
+      question: question,
+      initial_analysis_text: initialAnalysisForContext.value,
+      original_url: originalUrlForContext.value,
+    }
+
+    const result = await submitFollowUpQuestion(payload)
     conversationHistory.value[conversationHistory.value.length - 1].answer = result.answer
   } catch (error) {
     console.error('Follow-up submission failed:', error)
@@ -78,6 +121,8 @@ function startNewAnalysis() {
   viewState.value = 'FORM'
   conversationHistory.value = []
   errorMessage.value = ''
+  originalUrlForContext.value = ''
+  initialAnalysisForContext.value = ''
 }
 </script>
 
