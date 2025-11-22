@@ -1,6 +1,6 @@
 <template>
   <div class="analysis-container">
-    <LoadingOverlay :show="isLoading" :message="currentLoadingMessage" />
+    <LoadingOverlay :show="isLoading" :message="currentLoadingMessage || 'Loading...'" />
     <ErrorMessage v-if="errorMessage" :message="errorMessage" />
 
     <InitialRequestForm
@@ -110,7 +110,13 @@ async function handleFollowUpSubmit(question: string) {
     }
 
     const result = await submitFollowUpQuestion(payload)
-    conversationHistory.value[conversationHistory.value.length - 1].answer = result.answer
+    // 1. Get a reference to the last item in the array.
+    const lastMessage = conversationHistory.value[conversationHistory.value.length - 1]
+
+    // 2. Use a guard clause to ensure it exists before modifying it.
+    if (lastMessage) {
+      lastMessage.answer = result.answer
+    }
   } catch (error: any) {
     console.error('Follow-up submission failed:', error)
     if (error.response && error.response.data && error.response.data.detail) {
