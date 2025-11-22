@@ -84,11 +84,14 @@ async function handleSubmit(payload: any) {
 
     conversationHistory.value.push({ answer: result.analysis })
     viewState.value = 'RESULT'
-  } catch (error) {
+  } catch (error: any) {
     console.error('Analysis submission failed:', error)
     // Here we would set an error state to show in the UI
-    errorMessage.value =
-      'The initial analysis failed to complete. Please check your connection and try again.'
+    if (error.response && error.response.data && error.response.data.detail) {
+      errorMessage.value = error.response.data.detail
+    } else {
+      errorMessage.value = 'An unexpected error occurred during the analysis. Please try again.'
+    }
   } finally {
     isLoading.value = false
   }
@@ -108,9 +111,13 @@ async function handleFollowUpSubmit(question: string) {
 
     const result = await submitFollowUpQuestion(payload)
     conversationHistory.value[conversationHistory.value.length - 1].answer = result.answer
-  } catch (error) {
+  } catch (error: any) {
     console.error('Follow-up submission failed:', error)
-    errorMessage.value = 'The follow-up question failed. Please try asking again.'
+    if (error.response && error.response.data && error.response.data.detail) {
+      errorMessage.value = error.response.data.detail
+    } else {
+      errorMessage.value = 'The follow-up question failed. Please try again.'
+    }
     conversationHistory.value.pop()
   } finally {
     isFollowUpLoading.value = false
