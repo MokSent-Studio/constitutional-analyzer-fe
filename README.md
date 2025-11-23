@@ -3,10 +3,6 @@
 ```markdown
 # Constitution Analyzer - Frontend
 
-![Vue.js](https://img.shields.io/badge/vuejs-%2335495e.svg?style=for-the-badge&logo=vuedotjs&logoColor=%234FC08D)
-![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
-![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white)
-
 A modern, responsive Single Page Application (SPA) that serves as the user interface for the AI-powered Constitution Analyzer. It guides users through selecting legal texts, defining analysis parameters, and engaging in conversational follow-up Q&A.
 
 ## 🚀 Features
@@ -32,19 +28,7 @@ A modern, responsive Single Page Application (SPA) that serves as the user inter
 This project follows a **"Smart Container / Dumb Component"** architecture:
 
 ```
-src/
-├── api/                 # Axios configuration and API calls
-├── assets/              # Global static assets (main.css)
-├── components/
-│   ├── AnalysisForm.vue     # [Smart Container] Manages state, API calls, and error handling
-│   ├── InitialRequestForm.vue # [Dumb] The accordion input form
-│   ├── ResultView.vue       # [Dumb] The chat interface for results
-│   ├── ChapterSelector.vue  # [Dumb] Scrollable grid for chapter selection
-│   ├── LoadingOverlay.vue   # Full-screen loading state
-│   ├── MarkdownRenderer.vue # Utility to render AI text
-│   └── ...
-├── App.vue              # Root layout
-└── main.ts              # Entry point
+
 ```
 
 ## ⚡️ Getting Started
